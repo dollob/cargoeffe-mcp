@@ -286,4 +286,63 @@ Strategy: Place largest/heaviest first at Z=0, Y=0. Fill left-to-right, then fro
             "required": ["plan_id"],
         },
     ),
+    Tool(
+        name="pallet_pack_list",
+        description="List available pallet packs (pre-arranged pallets of boxes). Returns dimensions, weight, and box count for each.",
+        inputSchema={
+            "type": "object",
+            "properties": {},
+        },
+    ),
+    Tool(
+        name="pallet_pack_create",
+        description="Create a reusable pallet pack — boxes arranged on a pallet base. Each box's local position is relative to the pallet's left-front-bottom corner (X=width, Y=height up, Z=depth). The pack can then be placed into plans as a single unit.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Pallet pack name"},
+                "pallet_type": {"type": "string", "enum": ["EURO", "GMA_USA", "ISO", "ASIA", "AU", "CUSTOM"], "description": "Pallet standard"},
+                "pallet_length_cm": {"type": "number", "description": "Pallet base length in cm (default 120)"},
+                "pallet_width_cm": {"type": "number", "description": "Pallet base width in cm (default 100)"},
+                "pallet_height_cm": {"type": "number", "description": "Pallet base thickness in cm (default 15)"},
+                "pallet_weight_kg": {"type": "number", "description": "Empty pallet weight (default 25)"},
+                "max_load_kg": {"type": "number", "description": "Max load the pallet can hold (default 1000)"},
+                "boxes": {
+                    "type": "array",
+                    "description": "Boxes arranged on the pallet",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {"type": "string"},
+                            "length_cm": {"type": "number"},
+                            "width_cm": {"type": "number"},
+                            "height_cm": {"type": "number"},
+                            "weight_kg": {"type": "number"},
+                            "color_hex": {"type": "string"},
+                            "local_x_cm": {"type": "number", "description": "X offset from pallet corner"},
+                            "local_y_cm": {"type": "number", "description": "Y (height) offset — 0 = on pallet surface"},
+                            "local_z_cm": {"type": "number", "description": "Z (depth) offset from pallet corner"},
+                            "metadata": {"type": "string"},
+                        },
+                        "required": ["name", "length_cm", "width_cm", "height_cm", "weight_kg", "local_x_cm", "local_y_cm", "local_z_cm"],
+                    },
+                },
+            },
+            "required": ["name", "boxes"],
+        },
+    ),
+    Tool(
+        name="pallet_pack_place",
+        description="Place a pallet pack into a plan as a single unit. The whole pallet (with all its boxes) is positioned at once. Multiple copies can be placed in a row along Z.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "plan_id": {"type": "string", "description": "Plan ID"},
+                "pallet_pack_id": {"type": "string", "description": "Pallet pack ID from pallet_pack_list"},
+                "position": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3, "description": "[X, Y, Z] of the first pallet"},
+                "quantity": {"type": "integer", "description": "Number of copies to place in a row (default 1)"},
+            },
+            "required": ["plan_id", "pallet_pack_id", "position"],
+        },
+    ),
 ]

@@ -117,3 +117,18 @@ class CargoEffeClient:
 
     async def weight_check(self, plan_id: str) -> dict:
         return await self._get(f"/plans/{plan_id}/weight")
+
+    # ── Pallet Packs ──
+
+    async def list_pallet_packs(self) -> dict:
+        return await self._get("/pallet-packs")
+
+    async def create_pallet_pack(self, data: dict) -> dict:
+        return await self._post("/pallet-packs", data)
+
+    async def place_pallet_pack(self, plan_id: str, pallet_pack_id: str, position: list, quantity: int = 1) -> dict:
+        return await self._post(f"/plans/{plan_id}/pallet-packs", {
+            "pallet_pack_id": pallet_pack_id,
+            "position": position,
+            "quantity": quantity,
+        })

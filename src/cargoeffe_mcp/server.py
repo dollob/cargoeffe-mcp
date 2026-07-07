@@ -140,6 +140,17 @@ async def main():
                 )
             elif name == "weight_check":
                 result = await client.weight_check(arguments["plan_id"])
+            elif name == "pallet_pack_list":
+                result = await client.list_pallet_packs()
+            elif name == "pallet_pack_create":
+                result = await client.create_pallet_pack(arguments)
+            elif name == "pallet_pack_place":
+                result = await client.place_pallet_pack(
+                    arguments["plan_id"],
+                    arguments["pallet_pack_id"],
+                    arguments["position"],
+                    arguments.get("quantity", 1),
+                )
             else:
                 return [TextContent(type="text", text=json.dumps({"error": f"Unknown tool: {name}"}))]
 
@@ -201,6 +212,12 @@ def _cargo_planning_prompt():
 - Left/Right: 40-60% (critical if >65%)
 - If unbalanced, shift heavy batches: adjust `start_position` X or Z
 - Check `weight_assessment.suggestions` for exact shift distances
+
+## Pallet Packs
+- `pallet_pack_list` shows pre-arranged pallets (boxes already stacked on a pallet base).
+- `pallet_pack_place` drops a whole pallet into a plan as ONE unit — use for palletized freight.
+- Prefer pallet packs when cargo is already palletized; place them at floor (Y=0) since they include the pallet base height.
+- `quantity` places copies in a row along Z automatically.
 
 ## Common Mistakes
 - Leaving boxes unplaced → **always re-check** `unplaced` list and add more batches to fill remaining space
