@@ -30,7 +30,7 @@ cd cargoeffe-mcp && pip install -e .
       "command": "uvx",
       "args": ["cargoeffe-mcp"],
       "env": {
-        "CARGOEFFE_API_URL": "https://cargo.dollob.com",
+        "CARGOEFFE_API_URL": "https://api.dollob.com",
         "CARGOEFFE_MCP_TOKEN": "cfm_YOUR_TOKEN_HERE"
       }
     }
@@ -48,7 +48,7 @@ Add to `claude_desktop_config.json`:
       "command": "python",
       "args": ["-m", "cargoeffe_mcp.server"],
       "env": {
-        "CARGOEFFE_API_URL": "https://cargo.dollob.com",
+        "CARGOEFFE_API_URL": "https://api.dollob.com",
         "CARGOEFFE_MCP_TOKEN": "cfm_YOUR_TOKEN_HERE"
       }
     }
@@ -63,7 +63,7 @@ Set `CARGOEFFE_MCP_DEBUG=true` for verbose logging:
 ```json
 {
   "env": {
-    "CARGOEFFE_API_URL": "https://cargo.dollob.com",
+    "CARGOEFFE_API_URL": "https://api.dollob.com",
     "CARGOEFFE_MCP_TOKEN": "cfm_...",
     "CARGOEFFE_MCP_DEBUG": "true"
   }

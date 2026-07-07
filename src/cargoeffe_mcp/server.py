@@ -6,7 +6,7 @@ Usage:
     CARGOEFFE_API_URL=https://... cargoeffe-mcp   # with env vars
 
 Environment variables:
-    CARGOEFFE_API_URL   — CargoEffe backend URL (defaults to https://cargo.dollob.com)
+    CARGOEFFE_API_URL   — CargoEffe backend URL (defaults to https://api.dollob.com)
     CARGOEFFE_MCP_TOKEN — MCP token from Settings page (cfm_...)
     CARGOEFFE_MCP_DEBUG — Set to "true" for verbose stderr logging
 """
@@ -38,7 +38,7 @@ logger = logging.getLogger("cargoeffe-mcp")
 
 def _check_env() -> tuple[str, str]:
     """Validate required env vars. Returns (api_url, token)."""
-    api_url = os.environ.get("CARGOEFFE_API_URL", "https://cargo.dollob.com").strip()
+    api_url = os.environ.get("CARGOEFFE_API_URL", "https://api.dollob.com").strip()
     token = os.environ.get("CARGOEFFE_MCP_TOKEN", "").strip()
 
     if not token:
