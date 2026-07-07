@@ -38,7 +38,7 @@ logger = logging.getLogger("cargoeffe-mcp")
 
 def _check_env() -> tuple[str, str]:
     """Validate required env vars. Returns (api_url, token)."""
-    api_url = os.environ.get("CARGOEFFE_API_URL", "https://cargoeffe.com").strip()
+    api_url = os.environ.get("CARGOEFFE_API_URL", "https://cargo.dollob.com").strip()
     token = os.environ.get("CARGOEFFE_MCP_TOKEN", "").strip()
 
     if not token:
