@@ -6,7 +6,7 @@ Usage:
     CARGOEFFE_API_URL=https://... cargoeffe-mcp   # with env vars
 
 Environment variables:
-    CARGOEFFE_API_URL   — CargoEffe backend URL (e.g., https://cargoeffe.com)
+    CARGOEFFE_API_URL   — CargoEffe backend URL (defaults to https://cargo.dollob.com)
     CARGOEFFE_MCP_TOKEN — MCP token from Settings page (cfm_...)
     CARGOEFFE_MCP_DEBUG — Set to "true" for verbose stderr logging
 """
