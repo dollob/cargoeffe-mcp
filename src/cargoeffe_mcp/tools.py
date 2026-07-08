@@ -341,6 +341,7 @@ Strategy: Place largest/heaviest first at Z=0, Y=0. Fill left-to-right, then fro
                 "pallet_pack_id": {"type": "string", "description": "Pallet pack ID from pallet_pack_list"},
                 "position": {"type": "array", "items": {"type": "number"}, "minItems": 3, "maxItems": 3, "description": "[X, Y, Z] of the first pallet"},
                 "quantity": {"type": "integer", "description": "Number of copies to place in a row (default 1)"},
+                "loading_group": {"type": "string", "description": "Loading group name or ID (defaults to first group)"},
             },
             "required": ["plan_id", "pallet_pack_id", "position"],
         },

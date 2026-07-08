@@ -150,6 +150,7 @@ async def main():
                     arguments["pallet_pack_id"],
                     arguments["position"],
                     arguments.get("quantity", 1),
+                    arguments.get("loading_group"),
                 )
             else:
                 return [TextContent(type="text", text=json.dumps({"error": f"Unknown tool: {name}"}))]

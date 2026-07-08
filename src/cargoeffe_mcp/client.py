@@ -126,9 +126,12 @@ class CargoEffeClient:
     async def create_pallet_pack(self, data: dict) -> dict:
         return await self._post("/pallet-packs", data)
 
-    async def place_pallet_pack(self, plan_id: str, pallet_pack_id: str, position: list, quantity: int = 1) -> dict:
-        return await self._post(f"/plans/{plan_id}/pallet-packs", {
+    async def place_pallet_pack(self, plan_id: str, pallet_pack_id: str, position: list, quantity: int = 1, loading_group: str = None) -> dict:
+        body = {
             "pallet_pack_id": pallet_pack_id,
             "position": position,
             "quantity": quantity,
-        })
+        }
+        if loading_group:
+            body["loading_group"] = loading_group
+        return await self._post(f"/plans/{plan_id}/pallet-packs", body)
