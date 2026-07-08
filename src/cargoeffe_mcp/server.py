@@ -151,6 +151,7 @@ async def main():
                     arguments["position"],
                     arguments.get("quantity", 1),
                     arguments.get("loading_group"),
+                    arguments.get("spread", True),
                 )
             else:
                 return [TextContent(type="text", text=json.dumps({"error": f"Unknown tool: {name}"}))]
