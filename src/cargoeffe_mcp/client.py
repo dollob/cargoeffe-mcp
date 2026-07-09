@@ -82,6 +82,12 @@ class CargoEffeClient:
     async def set_container(self, plan_id: str, container_id: str) -> dict:
         return await self._put(f"/plans/{plan_id}/container", {"container_id": container_id})
 
+    async def create_container(self, name: str, length_cm: float, width_cm: float, height_cm: float, max_weight_kg: float = None) -> dict:
+        params = {"name": name, "length_cm": length_cm, "width_cm": width_cm, "height_cm": height_cm}
+        if max_weight_kg:
+            params["max_weight_kg"] = max_weight_kg
+        return await self._post(f"/containers/custom?{'&'.join(f'{k}={v}' for k,v in params.items())}")
+
     # ── Cargo Items ──
 
     async def list_cargo(self, plan_id: str) -> dict:
@@ -117,6 +123,11 @@ class CargoEffeClient:
 
     async def weight_check(self, plan_id: str) -> dict:
         return await self._get(f"/plans/{plan_id}/weight")
+
+    # ── Axle Templates ──
+
+    async def create_axle_template(self, data: dict) -> dict:
+        return await self._post("/axle-templates", data)
 
     # ── Pallet Packs ──
 

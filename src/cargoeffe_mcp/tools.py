@@ -20,7 +20,7 @@ TOOLS: list[Tool] = [
     ),
     Tool(
         name="plan_create",
-        description="Create a new cargo loading plan. Specify chassis type (container/rigid/articulated), regulatory region (US/EU/HK), and optionally an axle template and container.",
+        description="Create a new cargo loading plan. Specify chassis type (container/rigid/articulated), regulatory region (any region code), and optionally an axle template and container.",
         inputSchema={
             "type": "object",
             "properties": {
@@ -32,8 +32,7 @@ TOOLS: list[Tool] = [
                 },
                 "region": {
                     "type": "string",
-                    "enum": ["US", "EU", "HK"],
-                    "description": "Regulatory region for weight limits",
+                    "description": "Regulatory region (e.g., US, EU, HK, CA, JP, AU, or any custom region code). Used for weight regulation compliance.",
                 },
                 "axle_template_id": {
                     "type": "string",
@@ -95,6 +94,21 @@ TOOLS: list[Tool] = [
                 "container_id": {"type": "string", "description": "Container ID from container_list"},
             },
             "required": ["plan_id", "container_id"],
+        },
+    ),
+    Tool(
+        name="container_create",
+        description="Create a custom container with your own dimensions. Use when no built-in container matches the user's vehicle (van, truck, specialty container). Dimensions in cm.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Container name, e.g., 'Sprinter Van 4m'"},
+                "length_cm": {"type": "number", "description": "Internal length in cm"},
+                "width_cm": {"type": "number", "description": "Internal width in cm"},
+                "height_cm": {"type": "number", "description": "Internal height in cm"},
+                "max_weight_kg": {"type": "number", "description": "Max payload weight in kg (optional)"},
+            },
+            "required": ["name", "length_cm", "width_cm", "height_cm"],
         },
     ),
     Tool(
@@ -284,6 +298,35 @@ Strategy: Place largest/heaviest first at Z=0, Y=0. Fill left-to-right, then fro
                 "plan_id": {"type": "string", "description": "Plan ID"},
             },
             "required": ["plan_id"],
+        },
+    ),
+    Tool(
+        name="axle_template_create",
+        description="Create a custom axle/chassis template. Design your own vehicle configuration — axle count, positions, weight limits, deck dimensions, kingpin, tractor specs. Use when no built-in template matches the user's vehicle or region.",
+        inputSchema={
+            "type": "object",
+            "properties": {
+                "name": {"type": "string", "description": "Template name, e.g., 'Isuzu NRR 18ft Box'"},
+                "chassis_type": {"type": "string", "enum": ["rigid", "articulated"], "description": "Chassis type"},
+                "regulatory_region": {"type": "string", "description": "Region code, e.g., US_BRIDGE, EU_9653, CA_MTO"},
+                "axle_groups": {
+                    "type": "array",
+                    "description": "Axle groups: [{name, type: single|tandem|tridem, axleCount, interAxleSpacing, maxLegalLoadKg, suspensionType}]",
+                },
+                "axles": {
+                    "type": "array",
+                    "description": "Individual axles: [{name, positionZ, groupId, maxLoadKg}]",
+                },
+                "deck_start_z": {"type": "number", "description": "Cargo deck start position in metres from front"},
+                "deck_length": {"type": "number", "description": "Cargo deck length in metres"},
+                "tare_weight_kg": {"type": "number", "description": "Empty vehicle weight in kg"},
+                "tare_cog_z": {"type": "number", "description": "Empty vehicle COG Z position in metres"},
+                "has_kingpin": {"type": "boolean", "description": "Has kingpin (articulated only)"},
+                "kingpin_z": {"type": "number", "description": "Kingpin Z position (articulated only)"},
+                "has_tractor": {"type": "boolean", "description": "Has separate tractor unit (articulated only)"},
+                "tractor": {"type": "object", "description": "Tractor specs: {steerMaxLoadKg, driveGroupType, driveAxleCount, driveFirstAxleZ, driveInterAxleSpacing, driveMaxLegalLoadKg, tareWeightKg, tareCogZ, wheelbase, hitchOffset}"},
+            },
+            "required": ["name", "chassis_type", "regulatory_region", "axle_groups", "axles", "deck_start_z", "deck_length", "tare_weight_kg", "tare_cog_z"],
         },
     ),
     Tool(

@@ -114,6 +114,11 @@ async def main():
                 result = await client.list_containers()
             elif name == "container_set":
                 result = await client.set_container(arguments["plan_id"], arguments["container_id"])
+            elif name == "container_create":
+                result = await client.create_container(
+                    arguments["name"], arguments["length_cm"], arguments["width_cm"],
+                    arguments["height_cm"], arguments.get("max_weight_kg"),
+                )
             elif name == "cargo_add":
                 result = await client.add_cargo(arguments["plan_id"], arguments["items"])
             elif name == "cargo_list":
@@ -140,6 +145,8 @@ async def main():
                 )
             elif name == "weight_check":
                 result = await client.weight_check(arguments["plan_id"])
+            elif name == "axle_template_create":
+                result = await client.create_axle_template(arguments)
             elif name == "pallet_pack_list":
                 result = await client.list_pallet_packs()
             elif name == "pallet_pack_create":
@@ -193,36 +200,49 @@ def _cargo_planning_prompt():
                 content=TextContent(type="text", text="""# CargoEffe Placement Strategy
 
 ## Golden Rules
-1. **100% placement is the goal** — every box must be placed. Check `unplaced` after saving. If any items remain, adjust batch parameters (increase rows_per_layer, layers, or add new batches) until `unplaced` is empty.
-2. **ZERO collisions** — check `collision_warnings` after EVERY save. Boxes MUST NOT overlap, interpenetrate, or share the same space. Each X,Y,Z position is occupied by exactly one box. If warnings appear, fix those specific boxes BEFORE continuing.
-3. **Heaviest items FIRST** — place at Z=0 (front), Y=0 (floor). Heavy cargo near the front axle improves steering.
-4. **Fill full width** — use `boxes_per_row` that covers ≥80% of container width. Heavy items (>200kg) spread across width for balance. **Use rotation** (90° around Y) to fit long items across the width when they don't fit lengthwise.
-5. **Fill Z-axis fully** — use ALL available Z space within `effective_bounds.z_max`. Earlier delivery = lower Z.
-6. **Stack upward aggressively** — when floor is full, stack on top (Y>0). Target >60% vertical usage. Every stacked box MUST have ≥50% bottom support. **Critical: match the row pattern below** — use same `boxes_per_row` AND `row_spacing_z` as the supporting layer. Different row spacing causes boxes to straddle edges.
-7. **Respect constraints** — `noStack` boxes: nothing on top. `thisWayUp` boxes: no tilting. Different cargo types CANNOT occupy the same position.
+1. **100% placement** — every box must be placed. Check `unplaced` after saving.
+2. **ZERO collisions** — check `collision_warnings` after EVERY save. Fix before continuing.
+3. **Heaviest items FIRST** — at Z=0 (front), Y=0 (floor).
+4. **Fill full width evenly** — target 45-55% left/right weight split. Check `weight_assessment` after saving.
+5. **Fill Z-axis fully** — use ≥80% of `effective_bounds.z_max`. Earlier delivery = lower Z.
+6. **STACK UPWARD — THIS IS NOT OPTIONAL.** Floor is layer 0. When floor rows are full, create identical stacked layers at Y = box_height × layer_number. Target **≥60% vertical usage** (max Y / container height). Check this after every save — if below 60%, you are NOT done.
+7. **Respect constraints** — `noStack`: nothing on top. `thisWayUp`: no tilting.
+
+## ⚠️ Post-Placement Checklist (verify after EVERY save_placements)
+- [ ] Vertical usage ≥ 60%
+- [ ] Left/Right weight both 40-60%
+- [ ] Z filled ≥ 80% of `effective_bounds.z_max`
+- [ ] `unplaced` = 0, `collision_warnings` = 0
+
+## Axle Configs — Custom Design
+⚠️ **Built-in templates are starting points. You are expected to create custom axle configs.**
+- Use `axle_template_create` FIRST, then `plan_create` with the returned template ID.
+- **Workflow**: create axle → create plan with `axle_template_id` → add cargo → place → save.
+- **After creating, tell the user**: "I created a custom {type}: {name} — {N} axles, {tare}kg tare, region {region}."
+- **Cannot change axle later** — the axle is locked at plan creation. If different, create a new plan.
+- **Research local regulations** and cite your source: "Ontario MTO regs — 63,500 kg GCW per SPIF."
+- Canada = CA. CN = CHINA. HK = Hong Kong.
+
+## Group Small Identical Items BEFORE placing
+- If quantity ≥ 20 AND volume ≤ 0.5m³ → suggest grouping into stacks.
+- "I see {N} {item_name}s. Grouping into stacks of {X} = {N/X} units instead of {N}. Want me to do that?"
+- **Never silently place 50+ identical small items individually.**
 
 ## Batch Pattern Checklist
-- `boxes_per_row` = floor(container_width / box_width) — fill the full width
-- `rows_per_layer` = floor(z_max / box_length) — fill the full length
+- `boxes_per_row` = floor(container_width / box_width)
+- `rows_per_layer` = floor(z_max / box_length)
 - `start_position` = [0, 0, 0] for floor layers
-- Stacked layer Y = box_height_of_layer_below
-- Use `dry_run=true` first (1 token) to preview collisions before committing
-- **Try rotation** when a box is longer than available Z space: rotate 90° (quaternion [0,0.707,0,0.707]) to place it across X. Remember to adjust X position (box at [0.2, y, z] after rotation).
+- Stacked layer Y = previous_layer_Y + box_height_of_layer_below
+- Use `dry_run=true` first (1 token)
 
 ## Weight Balance Targets
-- Front/Rear: 40-60% (critical if >70%)
-- Left/Right: 40-60% (critical if >65%)
-- If unbalanced, shift heavy batches: adjust `start_position` X or Z
-- Check `weight_assessment.suggestions` for exact shift distances
-
-## Pallet Packs
-- `pallet_pack_list` shows pre-arranged pallets (boxes already stacked on a pallet base).
-- `pallet_pack_place` drops a whole pallet into a plan as ONE unit — use for palletized freight.
-- Prefer pallet packs when cargo is already palletized; place them at floor (Y=0) since they include the pallet base height.
-- `quantity` places copies in a row along Z automatically.
+- Front/Rear: 40-60% | Left/Right: 40-60%
+- If unbalanced, shift heavy batches in X or Z
 
 ## Common Mistakes
-- Leaving boxes unplaced → **always re-check** `unplaced` list and add more batches to fill remaining space
+- Only using floor (Y=0) — forget to stack upward → vertical usage <30%
+- Using wrong country template (CN = China, not Canada)
+- Leaving boxes unplaced → check `unplaced` after every save
 - **Ignoring collision_warnings** → after EVERY save, read ALL warnings. If any overlap/floating/weak_support, fix them immediately. Split batches if only some rows have issues.
 - Centering boxes (X offset > 0 without reason) → wastes space, causes left/right imbalance
 - Under-filling rows (boxes_per_row too small) → right side wasted, left-biased weight
